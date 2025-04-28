@@ -4,7 +4,7 @@ def SERVER_NAME = "test"
 def SERVER_USERNAME = "unitech"
 def SERVER_FOLDER = "conicet/composes" 
 def APP_URL = "http://tramix-cnative-ubu.silver.conicet.gov.ar/tramix-lh-ui/"
-//def TOKENCHAT = "https://chat.googleapis.com/v1/spaces/AAAA3-tMX1o/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=-dH-Hw2VFyim8Rlu1T9UToTuPei4xzddyTmokml4PTo%3D"
+def TOKENCHAT = "https://chat.googleapis.com/v1/spaces/AAAAATWNTUo/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=yGO0UYjinsE2dwzsny5zGOP1ulwNFob4SmGUnjP0ARk"
 def SERVER_FOLDER_VERSION = "/opt/unitech/conicet/apis/tramix-lh-api/version"
 
 //Variables comunes
@@ -69,6 +69,7 @@ pipeline {
             steps {
                 script {
                     echo "Ejecutando script remoto para actualizar la versión..."
+                    sh """ 
                         ssh -o StrictHostKeyChecking=no ${SERVER_USERNAME}@${SERVER_HOST} \\
                         "${env.PATH_SERVER_UI}/actualizar_version.sh ${params.VERSION}"
                     """
@@ -120,6 +121,21 @@ pipeline {
                 echo "Despliegue completado exitosamente para la versión ${params.VERSION} del componente ${params.COMPONENT}"
             }
         }
-                   
+
+        stage ("Envio de notificación al chat de Google") {
+            when {
+                expression { paramsOk /* && descargaUiOk && descargaAPIOk */ } // Por ahora sólo paramsOk
+            }
+            steps {
+                script {
+                    echo "Enviando notificación de finalización..."
+                    sh """
+                        curl -X POST -H 'Content-Type: application/json' \
+                        -d '{"text": "✅ Despliegue completado exitosamente para la versión ${params.VERSION} del componente ${params.COMPONENT}"}' \
+                        "${TOKENCHAT}"
+                    """
+                }
+            }
+        }           
     }
 }
