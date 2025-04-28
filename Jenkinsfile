@@ -69,9 +69,6 @@ pipeline {
             steps {
                 script {
                     echo "Ejecutando script remoto para actualizar la versión..."
-
-                    // Ejecuta el script por SSH usando los parámetros del pipeline
-                    sh """
                         ssh -o StrictHostKeyChecking=no ${SERVER_USERNAME}@${SERVER_HOST} \\
                         "${env.PATH_SERVER_UI}/actualizar_version.sh ${params.VERSION}"
                     """
